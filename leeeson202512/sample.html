@@ -1,61 +1,77 @@
-public class BlackoutSkull {
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WARNING</title>
 
-    public static void main(String[] args) throws InterruptedException {
-
-        String blackout = "\n\n\n\n\n\n\n\n\n";
-
-        String skullNormal =
-                "      _____      \n" +
-                "     /     \\     \n" +
-                "    |  o o  |    \n" +
-                "    |   ^   |    \n" +
-                "    |  ---  |    \n" +
-                "     \\_____/     \n";
-
-        String skullLaugh =
-                "      _____      \n" +
-                "     /     \\     \n" +
-                "    |  o o  |    \n" +
-                "    |   ^   |    \n" +
-                "    | \\___/ |    \n" +
-                "     \\_____/     \n";
-
-        // 背景黒・文字白
-        setBlackBackground();
-
-        // ブラックアウト
-        clearConsole();
-        System.out.print(blackout);
-        Thread.sleep(1200);
-
-        // 出現 → 笑う
-        for (int i = 0; i < 6; i++) {
-            clearConsole();
-            System.out.println(skullNormal);
-            Thread.sleep(400);
-
-            clearConsole();
-            System.out.println(skullLaugh);
-            Thread.sleep(400);
-        }
-
-        resetColor();
-    }
-
-    // 画面クリア
-    private static void clearConsole() {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
-    }
-
-    // 背景黒・文字白
-    private static void setBlackBackground() {
-        System.out.print("\033[40m"); // 背景黒
-        System.out.print("\033[37m"); // 文字白
-    }
-
-    // 色を元に戻す
-    private static void resetColor() {
-        System.out.print("\033[0m");
-    }
+<style>
+html, body {
+  margin:0;
+  height:100%;
+  background:black;
+  overflow:hidden;
+  font-family:monospace;
 }
+
+#center {
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+
+#number {
+  color:red;
+  font-size:clamp(72px,18vw,140px);
+}
+
+#skull {
+  display:none;
+  color:white;
+  font-size:clamp(14px,3vw,22px);
+  white-space:pre;
+}
+
+/* 透明クリック */
+#tap {
+  position:fixed;
+  inset:0;
+  cursor:none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="center">
+  <div id="number">5</div>
+  <pre id="skull">
+      _____
+     /     \
+    |  o o  |
+    |   ^   |
+    | \___/ |
+     \_____/
+  </pre>
+</div>
+
+<div id="tap"></div>
+
+<script>
+/* ===== 音 ===== */
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+let audioUnlocked = false;
+
+function beep(freq, dur){
+  if(!audioUnlocked) return;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.frequency.value = freq;
+  g.gain.value = 0.25;
+  o.connect(g); g.connect(ctx.destination);
+  o.start();
+  setTimeout(()=>o.stop()
