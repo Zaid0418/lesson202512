@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WARNING</title>
+
+<style>
+html, body {
+  margin:0;
+  height:100%;
+  background:black;
+  overflow:hidden;
+  font-family:monospace;
+}
+
+#center {
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+
+#number {
+  color:red;
+  font-size:clamp(72px,18vw,140px);
+}
+
+#skull {
+  display:none;
+  color:white;
+  font-size:clamp(14px,3vw,22px);
+  white-space:pre;
+}
+
+/* 透明クリック */
+#tap {
+  position:fixed;
+  inset:0;
+  cursor:none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="center">
+  <div id="number">5</div>
+  <pre id="skull">
+      _____
+     /     \
+    |  o o  |
+    |   ^   |
+    | \___/ |
+     \_____/
+  </pre>
+</div>
+
+<div id="tap"></div>
+
+<script>
+/* ===== 音 ===== */
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+let audioUnlocked = false;
+
+function beep(freq, dur){
+  if(!audioUnlocked) return;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.frequency.value = freq;
+  g.gain.value = 0.25;
+  o.connect(g); g.connect(ctx.destination);
+  o.start();
+  setTimeout(()=>o.stop(), dur);
+}
+
+function speak(text){
+  if(!audioUnlocked) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ja-JP";
+  speechSynthesis.speak(u);
+}
+
+/* ===== 音の解禁（1回だけ） ===== */
+document.getElementById("tap").addEventListener("click", () => {
+  ctx.resume();
+  audioUnlocked = true;
+
+  // TTS解禁用ダミー
+  speechSynthesis.cancel();
+  speechSynthesis.speak(new SpeechSynthesisUtterance(" "));
+}, { once:true });
+
+/* ===== 表示は自動で開始 ===== */
+const number = document.getElementById("number");
+const skull = document.getElementById("skull");
+
+let count = 5;
+number.textContent = count;
+
+const timer = setInterval(() => {
+  count--;
+  number.textContent = count;
+  beep(900,120);
+
+  if(count === 0){
+    clearInterval(timer);
+
+    number.style.display = "none";
+    skull.style.display = "block";
+
+    setTimeout(()=>beep(400,600), 300);
+    setTimeout(()=>speak("パソコンをロックしました"), 900);
+  }
+}, 1000);
+</script>
+
+</body>
+</html>
